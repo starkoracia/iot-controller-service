@@ -22,7 +22,7 @@ services:
     volumes:
       - './mosquitto.conf:/mosquitto/config/mosquitto.conf'
     ports:
-      - "1234:1234"
+      - "9898:9898"
     networks:
       - iot-network
 
