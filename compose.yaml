@@ -1,0 +1,54 @@
+version: '3.7'
+services:
+
+  db:
+    image: 'postgres:latest'
+    container_name: 'iot-controller-postgres-db'
+    restart: always
+    environment:
+      - 'POSTGRES_DB=${DB_NAME}'
+      - 'POSTGRES_USER=${DB_USERNAME}'
+      - 'POSTGRES_PASSWORD=${DB_PASSWORD}'
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - iot-network
+
+  broker:
+    image: 'eclipse-mosquitto:2.0'
+    container_name: 'iot-controller-mosquitto'
+    volumes:
+      - './mosquitto.conf:/mosquitto/config/mosquitto.conf'
+    ports:
+      - "1234:1234"
+    networks:
+      - iot-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: 'iot-controller-spring'
+    depends_on:
+      - db
+      - broker
+    ports:
+      - "8080:8080"
+    networks:
+      - iot-network
+    environment:
+      - 'DB_HOST=db'
+      - 'DB_PORT=5432'
+      - 'DB_NAME=${DB_NAME}'
+      - 'DB_USERNAME=${DB_USERNAME}'
+      - 'DB_PASSWORD=${DB_PASSWORD}'
+      - 'MQTT_BROKER_URI=${MQTT_BROKER_URI}'
+
+networks:
+  iot-network:
+    driver: bridge
+
+volumes:
+  pgdata:
